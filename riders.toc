@@ -1,8 +1,8 @@
 ## Interface: 11502
 ## Interface-Classic: 11502
-## Title: riders
+## Title: riders by |cFFFFF468Rabble|r
 ## Version: 0.5
-## Author: RabbleCode
+## Author: Rabble
 ## SavedVariables: RidersCharacterProgress
 
 ridersstart.lua
