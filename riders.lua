@@ -104,7 +104,9 @@ function riders:UpdatePlayerProgress()
 		riders.PlayerProgress.Level = riders.PlayerLevel
 		riders.PlayerProgress.Class = riders.PlayerClass
 
-		if(C_QuestLog.IsQuestFlaggedCompleted(riders.FinalQuest.QuestID)) then
+		if(riders.PlayerProgress.Level < riders.MinimumLevel) then
+			riders.PlayerProgress.Quests = nil
+		elseif(C_QuestLog.IsQuestFlaggedCompleted(riders.FinalQuest.QuestID)) then
 			riders.PlayerProgress.Completed = true;
 			riders.PlayerProgress.Quests = nil
 		elseif(IsQuestComplete(riders.FinalQuest.QuestID)) then
@@ -168,10 +170,12 @@ function riders:PrintCharacterProgress(character, realm)
 	local class = characterProgress.Class or "UNKNOWN"
 	local classColoredName = riders:GetClassColoredName(class, character, realm)
 
-	if(isCompleted) then
-		riders:PrintMessageWithRidersPrefix("Quest chain "..GREEN_FONT_COLOR_CODE.."already completed|r for "..YELLOW_FONT_COLOR_CODE..classColoredName);
+	if(level < riders.MinimumLevel) then
+		riders:PrintMessageWithRidersPrefix("Quests "..RED_FONT_COLOR_CODE.."not available|r for "..classColoredName.."|r for another "..RED_FONT_COLOR_CODE..(riders.MinimumLevel - level).."|r levels");
+	elseif(isCompleted) then
+		riders:PrintMessageWithRidersPrefix("Quests "..GREEN_FONT_COLOR_CODE.."already completed|r for "..YELLOW_FONT_COLOR_CODE..classColoredName);
 	else
-		riders:PrintMessageWithRidersPrefix("Quest chain "..RED_FONT_COLOR_CODE.."incomplete|r for "..YELLOW_FONT_COLOR_CODE..classColoredName);
+		riders:PrintMessageWithRidersPrefix("Quests "..RED_FONT_COLOR_CODE.."incomplete|r for "..YELLOW_FONT_COLOR_CODE..classColoredName);
 		riders:PrintQuestsProgress(characterProgress)
 	end
 end
