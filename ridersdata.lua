@@ -1,0 +1,3 @@
+function riders:LoadQuestData()
+	
+end
