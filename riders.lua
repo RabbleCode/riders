@@ -140,7 +140,7 @@ function riders:UpdatePlayerProgress()
 			
 			-- Else if no quests progressed, erase all progress
 			if(progressedQuests == 0) then
-				riders.PlayerProgress = nil
+				riders.PlayerProgress.Quests = nil
 			end
 		end
 
