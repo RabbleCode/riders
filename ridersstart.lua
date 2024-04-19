@@ -41,12 +41,12 @@ end
 
 function riders:LoadAccountData()
 
-	if(ridersCharacterProgress == nil) then 
-		ridersCharacterProgress = {} 
+	if(RidersCharacterProgress == nil) then 
+		RidersCharacterProgress = {} 
 	end
 	
-	if(ridersCharacterProgress[riders.CurrentRealm] == nil) then
-		ridersCharacterProgress[riders.CurrentRealm] = {}
+	if(RidersCharacterProgress[riders.CurrentRealm] == nil) then
+		RidersCharacterProgress[riders.CurrentRealm] = {}
 	end
 
 end

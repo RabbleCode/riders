@@ -49,8 +49,8 @@ function riders:CheckSpecificCharacter(character, realm)
 
 	local name = character.." - "..realm
 	local progress = nil
-	if(ridersCharacterProgress[realm] ~= nil and ridersCharacterProgress[realm][character] ~= nil) then
-		progress = ridersCharacterProgress[realm][character]	
+	if(RidersCharacterProgress[realm] ~= nil and RidersCharacterProgress[realm][character] ~= nil) then
+		progress = RidersCharacterProgress[realm][character]	
 	end
 	if progress == nil then	
 		riders:PrintMessageWithridersPrefix("Progress for "..YELLOW_FONT_COLOR_CODE..name..RED_FONT_COLOR_CODE.." not found.")
@@ -69,28 +69,28 @@ end
 function riders:EraseAllCharacterProgress()
 
 	riders:PrintMessageWithridersPrefix(RED_FONT_COLOR_CODE.."Erasing data for all characters.")		
-	ridersCharacterProgress = nil
+	RidersCharacterProgress = nil
 end
 
 function riders:SavePlayerProgress()
-	if(ridersCharacterProgress[riders.CurrentRealm] ~= nil) then
+	if(RidersCharacterProgress[riders.CurrentRealm] ~= nil) then
 		-- Delete character progress if it's nil
 		if(riders.PlayerProgress == nil) then
-			ridersCharacterProgress[riders.CurrentRealm][riders.PlayerName] = nil
+			RidersCharacterProgress[riders.CurrentRealm][riders.PlayerName] = nil
 		-- Save character progress
 		else
-			ridersCharacterProgress[riders.CurrentRealm][riders.PlayerName] = riders.PlayerProgress	
+			RidersCharacterProgress[riders.CurrentRealm][riders.PlayerName] = riders.PlayerProgress	
 		end
 
 		-- After updating character progress, check if there are any characters recorded on this realm
 		local realmCount = 0
-		for _,_ in pairs(ridersCharacterProgress[riders.CurrentRealm]) do	
+		for _,_ in pairs(RidersCharacterProgress[riders.CurrentRealm]) do	
 			realmCount = realmCount + 1
 		end
 
 		-- If there are no recorded characters on this realm, delete the realm too
 		if(realmCount == 0) then
-			ridersCharacterProgress[riders.CurrentRealm] = nil
+			RidersCharacterProgress[riders.CurrentRealm] = nil
 		end
 	end
 end
@@ -196,10 +196,10 @@ end
 function riders:PrintCharacterProgress(character, realm)
 
 
-	local realmProgress = ridersCharacterProgress[realm]
+	local realmProgress = RidersCharacterProgress[realm]
 	local characterProgress 
 	if(realmProgress ~= nil) then
-		characterProgress = ridersCharacterProgress[realm][character]
+		characterProgress = RidersCharacterProgress[realm][character]
 	end
 
 	-- Progress flags
@@ -272,7 +272,7 @@ end
 
 function riders:PrintMessageWithridersPrefix(message)
 
-	riders:PrintMessage(YELLOW_FONT_COLOR_CODE.."riders|r | "..message)
+	riders:PrintMessage(YELLOW_FONT_COLOR_CODE.."RIDERS|r | "..message)
 end
 
 function riders:PrintMessage(message)
