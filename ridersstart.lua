@@ -37,6 +37,7 @@ function riders:LoadPlayerData()
 	riders.PlayerFaction = UnitFactionGroup("player");
 	riders.PlayerLevel = UnitLevel("player");
 	riders.PlayerProgress = {}
+	riders.PlayerProgress.Quests = {}
 end
 
 function riders:LoadAccountData()
@@ -55,12 +56,12 @@ end
 function riders:PrimeItemCache()
 
 	-- Get each quest's item info
-	for _, quest in pairs(rider.Quests) do			
+	for _, quest in pairs(riders.Quests) do			
 		GetItemInfo(quest.ItemID)
 	end	
 end
 
 function riders:Announce()
 
-	riders:PrintMessageWithridersPrefix("activated");	
+	riders:PrintMessageWithRidersPrefix("activated");	
 end

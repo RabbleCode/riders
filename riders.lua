@@ -3,9 +3,11 @@ function riders:HandleSlashCommand(cmd)
 
 	if cmd ~= nil and cmd ~= "" then
 		if(cmd == "delete all") then			
-			riders:EraseAllCharacterProgress();
+			--riders:EraseAllCharacterProgress();
+			riders:PrintMessageWithRidersPrefix("delete all command not yet implemented")
 		elseif(cmd == "delete") then
-			riders:ErasePlayerProgress();
+			--riders:ErasePlayerProgress();
+			riders:PrintMessageWithRidersPrefix("delete command not yet implemented")
 		else
 			local character, realm = riders:GetCharacterAndRealm(cmd)
 			if(realm ~= nil) then
@@ -53,7 +55,7 @@ function riders:CheckSpecificCharacter(character, realm)
 		progress = RidersCharacterProgress[realm][character]	
 	end
 	if progress == nil then	
-		riders:PrintMessageWithridersPrefix("Progress for "..YELLOW_FONT_COLOR_CODE..name..RED_FONT_COLOR_CODE.." not found.")
+		riders:PrintMessageWithRidersPrefix("Progress for "..YELLOW_FONT_COLOR_CODE..name..RED_FONT_COLOR_CODE.." not found.")
 	else		
 		riders:PrintCharacterProgress(character, realm)
 	end
@@ -61,14 +63,14 @@ end
 
 function riders:ErasePlayerProgress()
 
-	riders:PrintMessageWithridersPrefix(RED_FONT_COLOR_CODE.."Erasing |rdata for "..YELLOW_FONT_COLOR_CODE..riders.PlayerNameWithRealm)
+	riders:PrintMessageWithRidersPrefix(RED_FONT_COLOR_CODE.."Erasing |rdata for "..YELLOW_FONT_COLOR_CODE..riders.PlayerNameWithRealm)
 	riders.PlayerProgress = nil
 	riders:SavePlayerProgress()
 end
 
 function riders:EraseAllCharacterProgress()
 
-	riders:PrintMessageWithridersPrefix(RED_FONT_COLOR_CODE.."Erasing data for all characters.")		
+	riders:PrintMessageWithRidersPrefix(RED_FONT_COLOR_CODE.."Erasing data for all characters.")		
 	RidersCharacterProgress = nil
 end
 
@@ -96,105 +98,60 @@ function riders:SavePlayerProgress()
 end
 
 function riders:UpdatePlayerProgress()
-
-
-	if(riders.MainQuest ~= nil and riders.MainQuest.Chapters ~= nil) then
+	if(riders.Quests ~= nil) then
 		riders:LoadPlayerData()
 		riders.PlayerProgress.Faction = riders.PlayerFaction
 		riders.PlayerProgress.Level = riders.PlayerLevel
 		riders.PlayerProgress.Class = riders.PlayerClass
 
-		local questID = riders.MainQuest.QuestID
+		local progressedQuests = 0
+		local completedQuests = 0
+		local totalQuests = 0
 
-		-- Quest is already completed and turned in
-		if C_QuestLog.IsQuestFlaggedCompleted(questID) then
-			riders.PlayerProgress.Completed = true
-		-- Quest is complete and ready to be turned in
-		elseif IsQuestComplete(questID) then
-			riders.PlayerProgress.Ready = true
-		-- Quest is not yet complete, check each individual chapter
-		else
-			riders:UpdateChapterProgress()
+		for _, quest in pairs(riders.Quests) do
+
+			totalQuests = totalQuests + 1
+
+			local questID = quest.QuestID
+			local itemID = quest.ItemID
+			local locationID = quest.LocationID
+			local location = quest.Location
+			
+			local questProgress = {}
+
+			-- Quest is already completed and turned in
+			if C_QuestLog.IsQuestFlaggedCompleted(questID) then
+				questProgress.Completed = true;
+				progressedQuests = progressedQuests + 1
+				completedQuests = completedQuests + 1
+			-- Quest is complete and ready to be turned in
+			elseif GetItemCount(itemID) > 0 then
+				questProgress.Ready = true
+				progressedQuests = progressedQuests + 1
+			-- Quest is not yet complete, check each individual chapter
+			else
+				questProgress = nil;
+			end
+
+			riders.PlayerProgress.Quests[questID] = questProgress
 		end
 		
+		-- If all quests have already been completed, just record that instead of each individual quest progress
+		if(completedQuests == totalQuests) then
+			riders.PlayerProgress.Completed = true;
+			riders.PlayerProgress.Quests = nil
+		-- Else if no quests progressed, erase all progress
+		elseif(progressedQuests == 0) then
+			riders.PlayerProgress = nil
+		end
+
 		riders:SavePlayerProgress();
 	else
-		riders:PrintMessageWithridersPrefix(RED_FONT_COLOR_CODE.."Quest information corrupted. Please reinstall the addon.")
+		riders:PrintMessageWithRidersPrefix(RED_FONT_COLOR_CODE.."Quest information corrupted. Please reinstall the addon.")
 	end
-end
-
-function riders:UpdateChapterProgress()
-	
-	if(riders.MainQuest ~= nil and riders.MainQuest.Chapters ~= nil) then			
-		local chapters = 0
-		for _, chapter in pairs(riders.MainQuest.Chapters) do
-			
-			local chapterProgress = {}
-			local questID = chapter.QuestID
-			local isComplete = C_QuestLog.IsQuestFlaggedCompleted(questID) 
-			local isReady = IsQuestComplete(questID)
-			local hasChapter = GetItemCount(chapter.ItemID) > 0
-			local hasPages = false
-			local pages = {}
-
-			-- If incomplete, record progress on individual pages
-			if not isComplete and not isReady then
-				hasPages, pages = riders:FindCollectedPages(chapter)
-			end
-			
-			-- Only cache data if there's something to cache
-			if(isComplete) then
-				chapters = chapters + 1;
-				chapterProgress.Completed = true
-			elseif(isReady) then
-				chapters = chapters + 1;
-				chapterProgress.Ready = true
-			elseif(hasPages) then
-				chapters = chapters + 1;
-				chapterProgress.Pages = pages
-			else
-				chapterProgress = nil
-			end
-
-			-- If progress on this chapter
-			if(chapterProgress ~= nil) then
-				-- Make sure the base Chapters node isn't empty
-				if(riders.PlayerProgress.Chapters == nil) then
-					riders.PlayerProgress.Chapters = {}
-				end
-				-- And update the node for this chapter
-				riders.PlayerProgress.Chapters[chapter.QuestID] = chapterProgress
-			-- If no progress on this chapter, remove the node for this chapter if it exists
-			elseif(riders.PlayerProgress.Chapters ~= nil) then
-				riders.PlayerProgress.Chapters[chapter.QuestID] = nil	
-			end
-
-			-- If no progress on any chapters, remove the entire Chapters node
-			if(chapters == 0) then
-				riders.PlayerProgress.Chapters = nil
-			end
-		end	
-	else
-		riders:PrintMessageWithridersPrefix(RED_FONT_COLOR_CODE.."Quest information corrupted. Please reinstall the addon.")
-	end
-end
-
-function riders:FindCollectedPages(chapter)
-	local hasPages = false
-	local pages = {}
-
-	for _, pageID in pairs(chapter.Pages) do			
-		if GetItemCount(pageID) > 0 then
-			hasPages = true;
-			pages[pageID] = true
-		end
-	end
-
-	return hasPages, pages
 end
 
 function riders:PrintCharacterProgress(character, realm)
-
 
 	local realmProgress = RidersCharacterProgress[realm]
 	local characterProgress 
@@ -205,7 +162,6 @@ function riders:PrintCharacterProgress(character, realm)
 	-- Progress flags
 	local hasProgress = characterProgress ~= nil
 	local isCompleted = hasProgress and characterProgress.Completed == true
-	local isReady = hasProgress and characterProgress.Ready == true
 	
 	-- Character info
 	local faction = characterProgress.Faction or "UNKNOWN"
@@ -214,63 +170,47 @@ function riders:PrintCharacterProgress(character, realm)
 	local classColoredName = riders:GetClassColoredName(class, character, realm)
 
 	if(isCompleted) then
-		riders:PrintMessageWithridersPrefix("Quest chain "..GREEN_FONT_COLOR_CODE.."already completed|r for "..YELLOW_FONT_COLOR_CODE..classColoredName);
-	elseif(isReady) then
-		riders:PrintMessageWithridersPrefix("Quest chain "..ORANGE_FONT_COLOR_CODE.."ready for turn in|r for "..YELLOW_FONT_COLOR_CODE..classColoredName);
+		riders:PrintMessageWithRidersPrefix("Quest chain "..GREEN_FONT_COLOR_CODE.."already completed|r for "..YELLOW_FONT_COLOR_CODE..classColoredName);
 	else
-		riders:PrintMessageWithridersPrefix("Quest chain "..RED_FONT_COLOR_CODE.."incomplete|r for "..YELLOW_FONT_COLOR_CODE..classColoredName);
-		riders:PrintChaptersProgress(characterProgress)
+		riders:PrintMessageWithRidersPrefix("Quest chain "..RED_FONT_COLOR_CODE.."incomplete|r for "..YELLOW_FONT_COLOR_CODE..classColoredName);
+		riders:PrintQuestsProgress(characterProgress)
 	end
 end
 
-function riders:PrintChaptersProgress(progress)
+function riders:PrintQuestsProgress(progress)
 
-	for _, chapter in pairs(riders.MainQuest.Chapters) do
+	for _, quest in pairs(riders.Quests) do
 
-		local questID = chapter.QuestID
-		local name = chapter.Name
-		local hasProgress = progress ~= nil and progress.Chapters ~= nil and progress.Chapters[questID] ~= nil
+		local questID = quest.QuestID
+		local hasProgress = progress ~= nil and progress.Quests ~= nil and progress.Quests[questID] ~= nil
+		local location = quest.Location
 
 		-- if character has recorded progress
 		if(hasProgress) then
-			local chapterProgress = progress.Chapters[questID]
+			local questProgress = progress.Quests[questID]
 			-- if chapter is already completed
-			if(chapterProgress.Completed == true) then
-				riders:PrintMessage("  "..YELLOW_FONT_COLOR_CODE..name..": "..GREEN_FONT_COLOR_CODE.."completed!")
+			if(questProgress.Completed == true) then
+				riders:PrintMessage("  "..YELLOW_FONT_COLOR_CODE..location..": "..GREEN_FONT_COLOR_CODE.."completed!")
 			-- else if chapter is ready for turn in
-			elseif(chapterProgress.Ready == true) then
-				riders:PrintMessage("  "..YELLOW_FONT_COLOR_CODE..name..": "..ORANGE_FONT_COLOR_CODE.."ready for turn in.") 
+			elseif(questProgress.Ready == true) then
+				riders:PrintMessage("  "..YELLOW_FONT_COLOR_CODE..location..": "..ORANGE_FONT_COLOR_CODE.."ready for turn in.") 
 			-- else if chapter is incomplete
 			else
-				riders:PrintMessage("  "..YELLOW_FONT_COLOR_CODE..name)
-				riders:PrintPagesProgress(chapter, chapterProgress)
+				riders:PrintMessage("  "..YELLOW_FONT_COLOR_CODE..location)
 			end
 		else
 			-- no recorded progress
-		riders:PrintMessage("  "..YELLOW_FONT_COLOR_CODE..name)
-			riders:PrintPagesProgress(chapter, nil)
-		end
-	end
-end
-
-function riders:PrintPagesProgress(chapter, chapterProgress)
-
-	for _, pageID in pairs(chapter.Pages) do
-		local _, link = GetItemInfo(pageID)
-		if(chapterProgress ~= nil and chapterProgress.Pages ~= nil and chapterProgress.Pages[pageID] ~= nil) then
-			riders:PrintMessage("    "..link..": "..GREEN_FONT_COLOR_CODE.."collected")
-		else
-			riders:PrintMessage("    "..link..": "..RED_FONT_COLOR_CODE.."missing")
+			riders:PrintMessage("  "..YELLOW_FONT_COLOR_CODE..location..": "..RED_FONT_COLOR_CODE.."incomplete.")
 		end
 	end
 end
 
 function riders:PrintHeader(characterName)
 
-	riders:PrintMessageWithridersPrefix("progress for "..YELLOW_FONT_COLOR_CODE..characterName.."...");
+	riders:PrintMessageWithRidersPrefix("progress for "..YELLOW_FONT_COLOR_CODE..characterName.."...");
 end
 
-function riders:PrintMessageWithridersPrefix(message)
+function riders:PrintMessageWithRidersPrefix(message)
 
 	riders:PrintMessage(YELLOW_FONT_COLOR_CODE.."RIDERS|r | "..message)
 end
@@ -292,5 +232,5 @@ end
 
 function riders:PrintDebug(message)
 	
-	DEFAULT_CHAT_FRAME:AddMessage(YELLOW_FONT_COLOR_CODE.."riders|r DEBUG | "..message);
+	DEFAULT_CHAT_FRAME:AddMessage(YELLOW_FONT_COLOR_CODE.."Riders|r DEBUG | "..message);
 end
