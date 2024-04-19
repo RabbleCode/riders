@@ -55,7 +55,7 @@ end
 function riders:PrimeItemCache()
 
 	-- Get each quest's item info
-	for _ quest in pairs(rider.Quests) do			
+	for _, quest in pairs(rider.Quests) do			
 		GetItemInfo(quest.ItemID)
 	end	
 end
