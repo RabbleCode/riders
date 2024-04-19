@@ -54,14 +54,9 @@ end
 -- Calls GetItemInfo on all related quest items to prime the local cache
 function riders:PrimeItemCache()
 
-	-- Get each chapter
-	for index, chapter in pairs(riders.MainQuest.Chapters) do			
-		GetItemInfo(chapter.ItemID)	
-
-		-- Get pages for each chapter
-		for index, itemID in pairs(chapter.Pages) do	
-			GetItemInfo(itemID)		
-		end	
+	-- Get each quest's item info
+	for _ quest in pairs(rider.Quests) do			
+		GetItemInfo(quest.ItemID)
 	end	
 end
 
