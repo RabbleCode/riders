@@ -104,45 +104,44 @@ function riders:UpdatePlayerProgress()
 		riders.PlayerProgress.Level = riders.PlayerLevel
 		riders.PlayerProgress.Class = riders.PlayerClass
 
-		local progressedQuests = 0
-		local completedQuests = 0
-		local totalQuests = 0
-
-		for _, quest in pairs(riders.Quests) do
-
-			totalQuests = totalQuests + 1
-
-			local questID = quest.QuestID
-			local itemID = quest.ItemID
-			local locationID = quest.LocationID
-			local location = quest.Location
-			
-			local questProgress = {}
-
-			-- Quest is already completed and turned in
-			if C_QuestLog.IsQuestFlaggedCompleted(questID) then
-				questProgress.Completed = true;
-				progressedQuests = progressedQuests + 1
-				completedQuests = completedQuests + 1
-			-- Quest is complete and ready to be turned in
-			elseif GetItemCount(itemID) > 0 then
-				questProgress.Ready = true
-				progressedQuests = progressedQuests + 1
-			-- Quest is not yet complete, check each individual chapter
-			else
-				questProgress = nil;
-			end
-
-			riders.PlayerProgress.Quests[questID] = questProgress
-		end
-		
-		-- If all quests have already been completed, just record that instead of each individual quest progress
-		if(completedQuests == totalQuests) then
+		if(C_QuestLog.IsQuestFlaggedCompleted(riders.FinalQuest.QuestID)) then
 			riders.PlayerProgress.Completed = true;
 			riders.PlayerProgress.Quests = nil
-		-- Else if no quests progressed, erase all progress
-		elseif(progressedQuests == 0) then
-			riders.PlayerProgress = nil
+		elseif(IsQuestComplete(riders.FinalQuest.QuestID)) then
+			riders.PlayerProgress.Ready = true;
+			riders.PlayerProgress.Quests = nil
+		else
+			local progressedQuests = 0
+
+			for _, quest in pairs(riders.Quests) do
+
+				local questID = quest.QuestID
+				local itemID = quest.ItemID
+				local locationID = quest.LocationID
+				local location = quest.Location
+				
+				local questProgress = {}
+
+				-- Quest is already completed and turned in
+				if C_QuestLog.IsQuestFlaggedCompleted(questID) then
+					questProgress.Completed = true;
+					progressedQuests = progressedQuests + 1
+				-- Quest is complete and ready to be turned in
+				elseif GetItemCount(itemID) > 0 then
+					questProgress.Ready = true
+					progressedQuests = progressedQuests + 1
+				-- Quest is not yet complete, check each individual chapter
+				else
+					questProgress = nil;
+				end
+
+				riders.PlayerProgress.Quests[questID] = questProgress
+			end		
+			
+			-- Else if no quests progressed, erase all progress
+			if(progressedQuests == 0) then
+				riders.PlayerProgress = nil
+			end
 		end
 
 		riders:SavePlayerProgress();
@@ -194,13 +193,10 @@ function riders:PrintQuestsProgress(progress)
 			-- else if chapter is ready for turn in
 			elseif(questProgress.Ready == true) then
 				riders:PrintMessage("  "..YELLOW_FONT_COLOR_CODE..location..": "..ORANGE_FONT_COLOR_CODE.."ready for turn in.") 
-			-- else if chapter is incomplete
-			else
-				riders:PrintMessage("  "..YELLOW_FONT_COLOR_CODE..location)
 			end
 		else
 			-- no recorded progress
-			riders:PrintMessage("  "..YELLOW_FONT_COLOR_CODE..location..": "..RED_FONT_COLOR_CODE.."incomplete.")
+			riders:PrintMessage("  "..YELLOW_FONT_COLOR_CODE..location.." |r("..quest.Coordinates.."): "..RED_FONT_COLOR_CODE.."incomplete.")
 		end
 	end
 end
