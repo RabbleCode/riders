@@ -1,7 +1,5 @@
 function riders:LoadQuestData()
 
-	riders.MinimumLevel = 40
-
 	riders.FinalQuest = {}
 	riders.FinalQuest.QuestID = 80120
 
