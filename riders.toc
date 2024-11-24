@@ -1,7 +1,7 @@
-## Interface: 11504
-## Interface-Classic: 11504
+## Interface: 11505
+## Interface-Classic: 11505
 ## Title: riders by |cFFFFF468Rabble|r
-## Version: 1.0.1
+## Version: 1.1
 ## Author: Rabble
 ## SavedVariables: RidersCharacterProgress
 
